@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💍 Rumo ao Altar — Jogo do Casamento</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --gold-pale: #F5E6C0;
+    --rose: #C9606A;
+    --rose-light: #F0A0A8;
+    --cream: #FBF7F0;
+    --dark: #2A1F14;
+    --mid: #5C4A34;
+    --soft: #8C7060;
+    --white: #FFFFFF;
+    --shadow: 0 8px 40px rgba(42,31,20,0.12);
+    --radius: 20px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BACKGROUND PATTERN */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(201,168,76,0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(201,96,106,0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    padding: 48px 20px 32px;
+    position: relative;
+  }
+  .header-ornament {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 12px;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 48px);
+    color: var(--dark);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  header h1 em { color: var(--rose); font-style: italic; }
+  header p {
+    color: var(--soft);
+    font-size: 15px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+  }
+
+  /* SETUP SCREEN */
+  #setup-screen {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 40px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(201,168,76,0.2);
+  }
+  #setup-screen h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    margin-bottom: 28px;
+    text-align: center;
+    color: var(--mid);
+  }
+  .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media(max-width:560px){ .setup-grid { grid-template-columns: 1fr; } }
+
+  .field-group { display: flex; flex-direction: column; gap: 8px; }
+  .field-group.full { grid-column: 1/-1; }
+  label { font-size: 13px; font-weight: 500; color: var(--mid); letter-spacing: 0.05em; text-transform: uppercase; }
+  input[type=text], input[type=number], input[type=date] {
+    padding: 14px 16px;
+    border: 1.5px solid rgba(92,74,52,0.2);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--dark);
+    background: var(--cream);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--gold); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--gold), var(--rose));
+    color: var(--white);
+    border: none;
+    padding: 16px 32px;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 20px rgba(201,96,106,0.3);
+    letter-spacing: 0.02em;
+    display: inline-block;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(201,96,106,0.4); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--mid);
+    border: 1.5px solid rgba(92,74,52,0.3);
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--gold); color: var(--gold); }
+
+  .setup-footer { text-align: center; margin-top: 32px; }
+
+  /* MAIN GAME */
+  #game-screen { display: none; }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  @media(max-width:500px){ .stats-bar { grid-template-columns: 1fr; } }
+
+  .stat-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(201,168,76,0.15);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .stat-card.gold::before { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+  .stat-card.rose::before { background: linear-gradient(90deg, var(--rose), var(--rose-light)); }
+  .stat-card.green::before { background: linear-gradient(90deg, #5BAD8F, #8FD4B5); }
+  .stat-card .stat-icon { font-size: 24px; margin-bottom: 6px; display: block; }
+  .stat-card .stat-label { font-size: 11px; color: var(--soft); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+  .stat-card .stat-value { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--dark); font-weight: 700; margin: 4px 0; }
+  .stat-card .stat-sub { font-size: 12px; color: var(--soft); }
+
+  /* PROGRESS SECTION */
+  .progress-section {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(201,168,76,0.15);
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--mid);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title span { font-size: 22px; }
+
+  .journey-bar-wrap { position: relative; margin-bottom: 12px; }
+  .journey-bar-bg {
+    height: 28px;
+    background: rgba(201,168,76,0.12);
+    border-radius: 100px;
+    overflow: hidden;
+    border: 1px solid rgba(201,168,76,0.25);
+  }
+  .journey-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--rose), var(--gold));
+    border-radius: 100px;
+    transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .journey-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    animation: shimmer 2s infinite;
+  }
+  @keyframes shimmer { to { left: 200%; } }
+
+  .journey-icons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 20px;
+  }
+  .journey-pct {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--gold);
+    font-weight: 700;
+    margin-top: 10px;
+  }
+
+  /* MILESTONES */
+  .milestones-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .milestones-row::-webkit-scrollbar { display: none; }
+  .milestone {
+    flex: 0 0 auto;
+    background: var(--cream);
+    border-radius: 14px;
+    padding: 12px 16px;
+    text-align: center;
+    border: 1.5px solid transparent;
+    transition: all 0.2s;
+    min-width: 90px;
+  }
+  .milestone.unlocked {
+    border-color: var(--gold);
+    background: linear-gradient(135deg, #FFF9EC, #FFF4E0);
+  }
+  .milestone.active {
+    border-color: var(--rose);
+    box-shadow: 0 0 0 3px rgba(201,96,106,0.15);
+  }
+  .milestone-icon { font-size: 24px; margin-bottom: 4px; }
+  .milestone-name { font-size: 11px; color: var(--soft); font-weight: 500; }
+  .milestone-val { font-size: 12px; color: var(--mid); font-weight: 600; margin-top: 2px; }
+
+  /* MISSIONS */
+  .missions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media(max-width:560px){ .missions-grid { grid-template-columns: 1fr; } }
+
+  .mission-card {
+    background: var(--cream);
+    border-radius: 16px;
+    padding: 18px;
+    border: 1.5px solid rgba(92,74,52,0.12);
+    transition: all 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .mission-card:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(201,168,76,0.15); }
+  .mission-card.done {
+    background: linear-gradient(135deg, #F0FFF8, #E8F5EF);
+    border-color: #5BAD8F;
+    opacity: 0.8;
+  }
+  .mission-card.done::after {
+    content: '✓';
+    position: absolute;
+    top: 12px; right: 14px;
+    color: #5BAD8F;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .mission-icon { font-size: 28px; margin-bottom: 8px; }
+  .mission-title { font-weight: 600; font-size: 14px; color: var(--dark); margin-bottom: 4px; }
+  .mission-desc { font-size: 12px; color: var(--soft); line-height: 1.5; margin-bottom: 10px; }
+  .mission-reward {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(201,168,76,0.12);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gold);
+  }
+
+  /* DEPOSIT SECTION */
+  .deposit-section {
+    background: linear-gradient(135deg, #2A1F14, #3D2C1C);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    color: var(--white);
+  }
+  .deposit-section .section-title { color: var(--gold-light); }
+  .deposit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  @media(max-width:500px){ .deposit-grid { grid-template-columns: 1fr; } }
+  .deposit-person {
+    background: rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 18px;
+    border: 1px solid rgba(201,168,76,0.2);
+  }
+  .deposit-person label {
+    color: var(--gold-pale);
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 10px;
+  }
+  .deposit-input-row { display: flex; gap: 8px; }
+  .deposit-input-row input {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(201,168,76,0.3);
+    color: var(--white);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+  }
+  .deposit-input-row input::placeholder { color: rgba(255,255,255,0.3); }
+  .deposit-input-row input:focus { border-color: var(--gold); }
+  .btn-add {
+    background: var(--gold);
+    color: var(--dark);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: transform 0.1s;
+  }
+  .btn-add:hover { transform: scale(1.05); }
+
+  /* HISTORY */
+  .history-section {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(201,168,76,0.15);
+  }
+  .history-list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto; }
+  .history-list::-webkit-scrollbar { width: 4px; }
+  .history-list::-webkit-scrollbar-thumb { background: var(--gold-pale); border-radius: 2px; }
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--cream);
+    border-radius: 12px;
+    font-size: 13px;
+  }
+  .history-item .hi-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .history-item .hi-dot.p1 { background: var(--rose); }
+  .history-item .hi-dot.p2 { background: var(--gold); }
+  .history-item .hi-date { color: var(--soft); flex: 1; }
+  .history-item .hi-amount { font-weight: 600; color: #5BAD8F; }
+  .history-empty { text-align: center; color: var(--soft); padding: 20px; font-style: italic; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--dark);
+    color: var(--white);
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 9999;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* CONFETTI */
+  .confetti-piece {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    top: -10px;
+    border-radius: 2px;
+    animation: confetti-fall 2.5s ease-in forwards;
+    pointer-events: none;
+    z-index: 9998;
+  }
+  @keyframes confetti-fall {
+    to { top: 110vh; transform: rotate(720deg); opacity: 0; }
+  }
+
+  /* WEEK CHALLENGE */
+  .challenge-card {
+    background: linear-gradient(135deg, #FFF7E6, #FFF0F2);
+    border-radius: var(--radius);
+    padding: 24px;
+    border: 1.5px solid var(--gold-pale);
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .challenge-card::before {
+    content: '🎯';
+    position: absolute;
+    right: 20px; top: 16px;
+    font-size: 36px;
+    opacity: 0.2;
+  }
+  .challenge-week { font-size: 11px; color: var(--soft); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; margin-bottom: 6px; }
+  .challenge-text { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--dark); margin-bottom: 10px; }
+  .challenge-tip { font-size: 13px; color: var(--soft); line-height: 1.6; }
+
+  /* LEVEL */
+  .level-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--gold), var(--rose));
+    color: var(--white);
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
+    margin: 24px 0;
+  }
+
+  /* Responsive */
+  @media(max-width: 640px) {
+    .deposit-grid { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: 1fr 1fr; }
+    .stats-bar .stat-card:last-child { grid-column: 1/-1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <span class="header-ornament">💍</span>
+    <h1>Rumo ao <em>Altar</em></h1>
+    <p>O jogo financeiro do amor — economizem juntos, casem em grande estilo</p>
+  </header>
+
+  <!-- SETUP -->
+  <div id="setup-screen">
+    <h2>✨ Vamos começar a jornada</h2>
+    <div class="setup-grid">
+      <div class="field-group">
+        <label>Seu nome 💛</label>
+        <input type="text" id="p1name" placeholder="Ex: João" />
+      </div>
+      <div class="field-group">
+        <label>Nome dela/dele 🌹</label>
+        <input type="text" id="p2name" placeholder="Ex: Maria" />
+      </div>
+      <div class="field-group full">
+        <label>Meta total do casamento (AOA ou R$)</label>
+        <input type="number" id="meta" placeholder="Ex: 500000" min="1000" />
+      </div>
+      <div class="field-group full">
+        <label>Data do casamento 📅</label>
+        <input type="date" id="weddingDate" />
+      </div>
+    </div>
+    <div class="setup-footer">
+      <button class="btn-primary" onclick="startGame()">Começar a aventura 💍</button>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="game-screen">
+
+    <!-- LEVEL -->
+    <div style="text-align:center; margin-bottom:16px">
+      <div class="level-badge" id="levelBadge">⭐ Noivos Iniciantes</div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-bar">
+      <div class="stat-card gold">
+        <span class="stat-icon">💰</span>
+        <div class="stat-label">Poupado</div>
+        <div class="stat-value" id="statSaved">0</div>
+        <div class="stat-sub">do total</div>
+      </div>
+      <div class="stat-card rose">
+        <span class="stat-icon">🎯</span>
+        <div class="stat-label">Faltam</div>
+        <div class="stat-value" id="statLeft">0</div>
+        <div class="stat-sub">para a meta</div>
+      </div>
+      <div class="stat-card green">
+        <span class="stat-icon">📅</span>
+        <div class="stat-label">Dias restantes</div>
+        <div class="stat-value" id="statDays">365</div>
+        <div class="stat-sub" id="statPerDay">por dia necessário</div>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="progress-section">
+      <div class="section-title"><span>🛤️</span> Jornada até o altar</div>
+      <div class="journey-bar-wrap">
+        <div class="journey-bar-bg">
+          <div class="journey-bar-fill" id="journeyBar" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="journey-icons">
+        <span title="Início">💑</span>
+        <span>🌸</span><span>💌</span><span>🥂</span><span>💒</span>
+        <span title="Casamento">👰💍</span>
+      </div>
+      <div class="journey-pct" id="journeyPct">0% da meta alcançada</div>
+
+      <div class="divider"></div>
+
+      <div class="section-title" style="font-size:16px"><span>🏅</span> Marcos da jornada</div>
+      <div class="milestones-row" id="milestonesRow"></div>
+    </div>
+
+    <!-- WEEKLY CHALLENGE -->
+    <div class="challenge-card" id="challengeCard"></div>
+
+    <!-- MISSIONS -->
+    <div class="progress-section">
+      <div class="section-title"><span>🗺️</span> Missões Semanais</div>
+      <div class="missions-grid" id="missionsGrid"></div>
+    </div>
+
+    <!-- DEPOSIT -->
+    <div class="deposit-section">
+      <div class="section-title"><span>💸</span> Registrar depósito</div>
+      <div class="deposit-grid">
+        <div class="deposit-person">
+          <label id="label-p1">Você 💛</label>
+          <div class="deposit-input-row">
+            <input type="number" id="dep1" placeholder="Valor" min="0" />
+            <button class="btn-add" onclick="addDeposit(1)">+</button>
+          </div>
+        </div>
+        <div class="deposit-person">
+          <label id="label-p2">Parceiro/a 🌹</label>
+          <div class="deposit-input-row">
+            <input type="number" id="dep2" placeholder="Valor" min="0" />
+            <button class="btn-add" onclick="addDeposit(2)">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="history-section">
+      <div class="section-title"><span>📜</span> Histórico</div>
+      <ul class="history-list" id="historyList">
+        <li class="history-empty">Nenhum depósito ainda. Comece agora! 🌱</li>
+      </ul>
+    </div>
+
+    <div style="text-align:center; margin: 28px 0 12px">
+      <button class="btn-secondary" onclick="resetGame()">↩ Recomeçar jogo</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== DATA =====================
+const MILESTONES = [
+  { pct: 10, icon: '🌱', name: 'Primeiros 10%', reward: 'Date gratuito' },
+  { pct: 25, icon: '💌', name: 'Um quarto!', reward: 'Foto juntos' },
+  { pct: 40, icon: '🥂', name: 'Quase metade', reward: 'Jantar especial' },
+  { pct: 50, icon: '💍', name: 'Metade!', reward: 'Ensaio fotográfico' },
+  { pct: 70, icon: '🎊', name: '70% Incrível!', reward: 'Escolher buffet' },
+  { pct: 85, icon: '💒', name: 'Quase lá!', reward: 'Prova do vestido' },
+  { pct: 100, icon: '👰', name: 'META!', reward: 'CASAMENTO! 🎉' },
+];
+
+const MISSIONS = [
+  { icon: '☕', title: 'Cortar o café de fora', desc: 'Façam café em casa por 7 dias e depositem o que economizaram.', reward: 'XP +50' },
+  { icon: '🛒', title: 'Lista de compras inteligente', desc: 'Comprem só o que está na lista esta semana. Sem extras.', reward: 'XP +40' },
+  { icon: '🍳', title: 'Semana do cook', desc: 'Cozinhem juntos 5x esta semana e evitem delivery.', reward: 'XP +60' },
+  { icon: '📱', title: 'App gratuito date', desc: 'Organizem um date com custo zero — praia, parque ou piquenique.', reward: 'XP +30' },
+  { icon: '💡', title: 'Caça às despesas', desc: 'Listem 3 gastos desnecessários e cancelem/reduzam pelo menos 1.', reward: 'XP +70' },
+  { icon: '🎲', title: 'Desafio dos trocos', desc: 'Guardem todo troco recebido durante a semana num cofrinho.', reward: 'XP +35' },
+];
+
+const CHALLENGES = [
+  { text: 'Desafio dos R$5 por dia 🌟', tip: 'Cada um poupa pelo menos R$5 por dia esta semana. Pequenas ações criam grandes resultados!' },
+  { text: 'Semana sem supérfluos 🚫', tip: 'Nenhuma compra por impulso. Perguntem-se: "Precisamos disso ou só queremos?"' },
+  { text: 'Renda extra juntos 💼', tip: 'Vendam algo que não usam, façam um bico ou renda extra online. Depositem tudo!' },
+  { text: 'Revisão de assinaturas 📋', tip: 'Cancelem pelo menos um serviço de streaming ou assinatura que pouco usam.' },
+  { text: 'Desafio do envelope 💌', tip: 'Separem fisicamente o dinheiro da semana em envelopes por categoria. Não abra o do casamento!' },
+];
+
+const LEVELS = [
+  { min: 0, label: '⭐ Noivos Iniciantes' },
+  { min: 10, label: '💌 Apaixonados Econômicos' },
+  { min: 25, label: '🌸 Parceiros do Futuro' },
+  { min: 50, label: '💍 Guardiões do Lar' },
+  { min: 75, label: '🏆 Campeões do Altar' },
+  { min: 100, label: '👑 Reis do Casamento' },
+];
+
+// ===================== STATE =====================
+let state = {};
+
+function getState() {
+  const s = localStorage.getItem('wedding_game_v2');
+  return s ? JSON.parse(s) : null;
+}
+
+function saveState() {
+  localStorage.setItem('wedding_game_v2', JSON.stringify(state));
+}
+
+// ===================== INIT =====================
+window.onload = () => {
+  const saved = getState();
+  if (saved && saved.started) {
+    state = saved;
+    showGame();
+  }
+};
+
+function startGame() {
+  const p1 = document.getElementById('p1name').value.trim();
+  const p2 = document.getElementById('p2name').value.trim();
+  const meta = parseFloat(document.getElementById('meta').value);
+  const date = document.getElementById('weddingDate').value;
+
+  if (!p1 || !p2 || !meta || !date) {
+    showToast('⚠️ Preencha todos os campos!'); return;
+  }
+
+  state = {
+    started: true,
+    p1: p1, p2: p2,
+    meta: meta,
+    weddingDate: date,
+    total: 0,
+    p1total: 0,
+    p2total: 0,
+    history: [],
+    missions: [false, false, false, false, false, false],
+    challengeWeek: Math.floor(Math.random() * CHALLENGES.length),
+    startedAt: new Date().toISOString(),
+  };
+  saveState();
+  showGame();
+}
+
+function showGame() {
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'block';
+  document.getElementById('label-p1').textContent = state.p1 + ' 💛';
+  document.getElementById('label-p2').textContent = state.p2 + ' 🌹';
+  renderAll();
+}
+
+// ===================== RENDER =====================
+function renderAll() {
+  renderStats();
+  renderProgress();
+  renderMilestones();
+  renderChallenge();
+  renderMissions();
+  renderHistory();
+  renderLevel();
+}
+
+function fmt(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+  return Math.round(n).toLocaleString('pt-BR');
+}
+
+function renderStats() {
+  const left = Math.max(0, state.meta - state.total);
+  const days = Math.max(1, Math.ceil((new Date(state.weddingDate) - new Date()) / 86400000));
+  const perDay = left / days;
+
+  document.getElementById('statSaved').textContent = fmt(state.total);
+  document.getElementById('statLeft').textContent = fmt(left);
+  document.getElementById('statDays').textContent = days;
+  document.getElementById('statPerDay').textContent = fmt(perDay) + '/dia necessário';
+}
+
+function renderProgress() {
+  const pct = Math.min(100, (state.total / state.meta) * 100);
+  document.getElementById('journeyBar').style.width = pct + '%';
+  document.getElementById('journeyPct').textContent = pct.toFixed(1) + '% da meta alcançada';
+}
+
+function renderMilestones() {
+  const pct = (state.total / state.meta) * 100;
+  const container = document.getElementById('milestonesRow');
+  container.innerHTML = MILESTONES.map(m => {
+    const unlocked = pct >= m.pct;
+    const active = pct < m.pct && pct >= (m.pct - 15);
+    return `<div class="milestone ${unlocked ? 'unlocked' : ''} ${active ? 'active' : ''}">
+      <div class="milestone-icon">${unlocked ? m.icon : '🔒'}</div>
+      <div class="milestone-name">${m.name}</div>
+      <div class="milestone-val">${m.pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function renderChallenge() {
+  const c = CHALLENGES[state.challengeWeek % CHALLENGES.length];
+  document.getElementById('challengeCard').innerHTML = `
+    <div class="challenge-week">🗓️ Desafio da semana</div>
+    <div class="challenge-text">${c.text}</div>
+    <div class="challenge-tip">💡 ${c.tip}</div>`;
+}
+
+function renderMissions() {
+  const grid = document.getElementById('missionsGrid');
+  grid.innerHTML = MISSIONS.map((m, i) => `
+    <div class="mission-card ${state.missions[i] ? 'done' : ''}" onclick="toggleMission(${i})">
+      <div class="mission-icon">${m.icon}</div>
+      <div class="mission-title">${m.title}</div>
+      <div class="mission-desc">${m.desc}</div>
+      <div class="mission-reward">🏅 ${m.reward}</div>
+    </div>`).join('');
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!state.history.length) {
+    list.innerHTML = '<li class="history-empty">Nenhum depósito ainda. Comece agora! 🌱</li>';
+    return;
+  }
+  list.innerHTML = [...state.history].reverse().map(h => `
+    <li class="history-item">
+      <div class="hi-dot ${h.player === 1 ? 'p1' : 'p2'}"></div>
+      <div style="flex:1">
+        <strong>${h.player === 1 ? state.p1 : state.p2}</strong> depositou
+      </div>
+      <div class="hi-date">${h.date}</div>
+      <div class="hi-amount">+${fmt(h.amount)}</div>
+    </li>`).join('');
+}
+
+function renderLevel() {
+  const pct = (state.total / state.meta) * 100;
+  let level = LEVELS[0];
+  for (const l of LEVELS) { if (pct >= l.min) level = l; }
+  document.getElementById('levelBadge').textContent = level.label;
+}
+
+// ===================== ACTIONS =====================
+function addDeposit(player) {
+  const input = document.getElementById('dep' + player);
+  const val = parseFloat(input.value);
+  if (!val || val <= 0) { showToast('⚠️ Insira um valor válido!'); return; }
+
+  const prevPct = (state.total / state.meta) * 100;
+  state.total += val;
+  if (player === 1) state.p1total += val;
+  else state.p2total += val;
+
+  const date = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'short' });
+  state.history.push({ player, amount: val, date });
+  input.value = '';
+  saveState();
+
+  const newPct = (state.total / state.meta) * 100;
+  const name = player === 1 ? state.p1 : state.p2;
+  showToast(`💰 ${name} depositou ${fmt(val)}! Incrível!`);
+
+  // Check milestone unlocks
+  for (const m of MILESTONES) {
+    if (prevPct < m.pct && newPct >= m.pct) {
+      setTimeout(() => {
+        fireConfetti();
+        showToast(`🎉 Marco desbloqueado: ${m.name}! Recompensa: ${m.reward}`);
+      }, 800);
+    }
+  }
+
+  renderAll();
+}
+
+function toggleMission(i) {
+  if (state.missions[i]) { showToast('✅ Missão já concluída!'); return; }
+  state.missions[i] = true;
+  saveState();
+  showToast('🎯 Missão concluída! Continue assim!');
+  renderMissions();
+}
+
+function resetGame() {
+  if (!confirm('Tem certeza? Todo o progresso será perdido.')) return;
+  localStorage.removeItem('wedding_game_v2');
+  location.reload();
+}
+
+// ===================== UI UTILS =====================
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function fireConfetti() {
+  const colors = ['#C9A84C','#C9606A','#5BAD8F','#F5E6C0','#F0A0A8'];
+  for (let i = 0; i < 40; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left: ${Math.random()*100}vw;
+      background: ${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration: ${1.5 + Math.random() * 1.5}s;
+      animation-delay: ${Math.random() * 0.5}s;
+      transform: rotate(${Math.random()*360}deg);
+      width: ${6 + Math.random()*6}px;
+      height: ${6 + Math.random()*6}px;
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  }
+}
+</script>
+</body>
+</html>
